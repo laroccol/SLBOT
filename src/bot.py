@@ -11,14 +11,17 @@ from util.vec import Vec3
 
 class MyBot(BaseAgent):
 
+
     def __init__(self, name, team, index):
         super().__init__(name, team, index)
         self.active_sequence: Sequence = None
         self.boost_pad_tracker = BoostPadTracker()
 
+
     def initialize_agent(self):
         # Set up information about the boost pads now that the game is active and the info is available
         self.boost_pad_tracker.initialize_boosts(self.get_field_info())
+
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         """
@@ -77,6 +80,7 @@ class MyBot(BaseAgent):
 
         return controls
 
+
     def begin_front_flip(self, packet):
         # Send some quickchat just for fun
         self.send_quick_chat(team_only=False, quick_chat=QuickChatSelection.Information_IGotIt)
@@ -94,45 +98,31 @@ class MyBot(BaseAgent):
         # Return the controls associated with the beginning of the sequence so we can start right away.
         return self.active_sequence.tick(packet)
 
+
     def kickoff(self, packet):
+
         my_car = packet.game_cars[self.index]
         car_start = my_car.physics.location
-        target = Vec3(packet.game_ball.physics.location) + Vec3(0, 200 * my_car.team, 0)
 
-        controls = SimpleControllerState()
-        controls.throttle = 1
-        controls.boost = True
+        direction = -1 if car_start.x > 0 else 1
+        if my_car.team == 1: direction *= -1
 
-        # Kickoff Positions; -2 (Diagonal Left), -1 (Middle Left), 0 (Middle), 1 (Middle Right), 2 (Diagonal Right)
-        position = 0
-        if car_start.x < -2000:
-            position = -2
-        elif car_start.x < 0:
-            position = -1
-        elif car_start.x > 2000:
-            position = 2
-        elif car_start.x > 0:
-            position = 1
 
-        if my_car.team == 0:
-            position *= -1
-
-        if position == -2:
-            self.diagonal_kickoff(packet, -1)
-        elif position == -1:
-            self.offset_kickoff(packet, -1)
-        elif position == 0:
+        if car_start.x < -2000 or car_start.x > 2000:
+            self.diagonal_kickoff(packet, direction)
+        elif car_start.x != 0:
+            self.offset_kickoff(packet, direction)
+        else:
             self.middle_kickoff(packet)
-        elif position == 1:
-            self.offset_kickoff(packet, 1)
-        elif position == 2:
-            self.diagonal_kickoff(packet, 1)
-                
+
+
     def diagonal_kickoff(self, packet, direction):
         pass
-    
+
+
     def offset_kickoff(self, packet, direction):
         pass
+
 
     def middle_kickoff(self, packet):
         pass
