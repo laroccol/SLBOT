@@ -36,8 +36,12 @@ class MyBot(BaseAgent):
             if controls is not None:
                 return controls
 
+        if packet.game_info.is_kickoff_pause:
+            self.kickoff(packet)
+
         # Gather some information about our car and the ball
         my_car = packet.game_cars[self.index]
+        enemy_car = packet.game_cars[1 - self.index]
         car_location = Vec3(my_car.physics.location)
         car_velocity = Vec3(my_car.physics.velocity)
         ball_location = Vec3(packet.game_ball.physics.location)
@@ -66,8 +70,9 @@ class MyBot(BaseAgent):
             return self.begin_front_flip(packet)
 
         controls = SimpleControllerState()
-        controls.steer = steer_toward_target(my_car, target_location)
+        # controls.steer = steer_toward_target(my_car, Vec3(enemy_car.physics.location))
         controls.throttle = 1.0
+        controls.boost = 1.0
         # You can set more controls if you want, like controls.boost.
 
         return controls
@@ -83,7 +88,51 @@ class MyBot(BaseAgent):
             ControlStep(duration=0.05, controls=SimpleControllerState(jump=False)),
             ControlStep(duration=0.2, controls=SimpleControllerState(jump=True, pitch=-1)),
             ControlStep(duration=0.8, controls=SimpleControllerState()),
+            
         ])
 
         # Return the controls associated with the beginning of the sequence so we can start right away.
         return self.active_sequence.tick(packet)
+
+    def kickoff(self, packet):
+        my_car = packet.game_cars[self.index]
+        car_start = my_car.physics.location
+        target = Vec3(packet.game_ball.physics.location) + Vec3(0, 200 * my_car.team, 0)
+
+        controls = SimpleControllerState()
+        controls.throttle = 1
+        controls.boost = True
+
+        # Kickoff Positions; -2 (Diagonal Left), -1 (Middle Left), 0 (Middle), 1 (Middle Right), 2 (Diagonal Right)
+        position = 0
+        if car_start.x < -2000:
+            position = -2
+        elif car_start.x < 0:
+            position = -1
+        elif car_start.x > 2000:
+            position = 2
+        elif car_start.x > 0:
+            position = 1
+
+        if my_car.team == 0:
+            position *= -1
+
+        if position == -2:
+            self.diagonal_kickoff(packet, -1)
+        elif position == -1:
+            self.offset_kickoff(packet, -1)
+        elif position == 0:
+            self.middle_kickoff(packet)
+        elif position == 1:
+            self.offset_kickoff(packet, 1)
+        elif position == 2:
+            self.diagonal_kickoff(packet, 1)
+                
+    def diagonal_kickoff(self, packet, direction):
+        pass
+    
+    def offset_kickoff(self, packet, direction):
+        pass
+
+    def middle_kickoff(self, packet):
+        pass
