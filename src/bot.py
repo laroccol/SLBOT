@@ -34,6 +34,18 @@ class MyBot(BaseAgent):
         # Keep our boost pad info updated with which pads are currently active
         self.boost_pad_tracker.update_boost_status(packet)
 
+        self.renderer.draw_string_3d(packet.game_cars[self.index].physics.location, 1, 1, self.state.name, self.renderer.white())
+
+        ball_prediction = self.get_ball_prediction_struct()
+        
+        if ball_prediction is not None:
+            previous_location = ball_prediction.slices[0].physics.location
+            for i in range(1, 160):
+                prediction_slice = ball_prediction.slices[i]
+                location = prediction_slice.physics.location
+                self.renderer.draw_line_3d(previous_location, location, self.renderer.white())
+                previous_location = location
+
         next_state = self.state.exit_conditions(self.index, packet)
         if next_state != None:
             self.state = next_state

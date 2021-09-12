@@ -7,6 +7,7 @@ class State():
 
         self.field_info = field_info
         self.controller = SimpleControllerState()
+        self.name = "Default_State"
 
     def tick(self, car_index, packet):
 

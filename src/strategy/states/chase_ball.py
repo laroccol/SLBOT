@@ -8,6 +8,7 @@ class ChaseBall(State):
     def __init__(self, field_info):
 
         super().__init__(field_info)
+        self.name = "CHASE_BALL"
 
     def tick(self, car_index, packet):
 

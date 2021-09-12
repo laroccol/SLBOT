@@ -9,6 +9,7 @@ class Retreat(State):
     def __init__(self, field_info):
 
         super().__init__(field_info)
+        self.name = "RETREAT"
 
     def tick(self, car_index, packet):
         
